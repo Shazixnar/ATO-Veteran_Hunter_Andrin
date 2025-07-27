@@ -1,0 +1,10 @@
+{
+    "name": "Veteran_Hunter_Andrin",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/Shazixnar/ATO-Veteran_Hunter_Andrin",
+    "description": "redo Andrin's traits",
+    "dependencies": [
+        "meds-Obeliskial_Essentials-1.4.0",
+        "meds-Obeliskial_Content-1.4.0"
+    ]
+}
