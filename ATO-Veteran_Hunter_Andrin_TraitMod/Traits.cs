@@ -239,19 +239,9 @@ namespace TraitMod
         [HarmonyPatch(typeof(Character), "SetEvent")]
         public static void SetEventPrefix(ref Character __instance, ref Enums.EventActivation theEvent, Character target = null)
         {
-            Hero[] teamHero = MatchManager.Instance.GetTeamHero();
-            bool flag = false;
-            for (int i = 0; i < teamHero.Length; i++)
-            {
-                if (teamHero[i].HaveTrait("shazixnarmercilesshunter"))
-                {
-                    flag = true;
-                    break;
-                }
-            }
             if (theEvent == Enums.EventActivation.Hitted
                     && !__instance.IsHero
-                    && flag
+                    && target.HaveTrait("shazixnarmercilesshunter")
                     && __instance.HasEffect("mark"))
             {
                 // 有无情猎手天赋时，敌人带标记，被安德兰击中时承受标记层数伤害，流血增加倍率。
