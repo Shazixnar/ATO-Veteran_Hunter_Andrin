@@ -11,7 +11,7 @@ namespace VeteranHunterAndrin
     [BepInProcess("AcrossTheObelisk.exe")]
     public class Plugin : BaseUnityPlugin
     {
-        internal const int ModDate = 20250728;
+        internal const int ModDate = 20250801;
         private readonly Harmony harmony = new(PluginInfo.PLUGIN_GUID);
         internal static ManualLogSource Log;
         private void Awake()
@@ -22,7 +22,7 @@ namespace VeteranHunterAndrin
             Essentials.RegisterMod(
                 _name: PluginInfo.PLUGIN_NAME,
                 _author: "Shazixnar",
-                _description: "Redone Evelyn traits and element cards, as well as a perk.",
+                _description: "Redone Andrin's traits.",
                 _version: PluginInfo.PLUGIN_VERSION,
                 _date: ModDate,
                 _link: @"https://across-the-obelisk.thunderstore.io/package/Shazixnar/Veteran_Hunter_Andrin/",

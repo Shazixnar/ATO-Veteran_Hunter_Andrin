@@ -14,7 +14,7 @@ namespace TraitMod
     internal class Traits
     {
 
-        public static string[] myTraitList = { "shazixnarmasterofmeleeandranged", "shazixnarmasteroftrack" };
+        public static string[] myTraitList = { "shazixnarmasterofmeleeandranged", "shazixnarmasteroftrack", "shazixnartracker" };
 
         public static void myDoTrait(string _trait, ref Trait __instance)
         {
@@ -75,7 +75,7 @@ namespace TraitMod
                                     teamNpc[i].SetAuraTrait(_character, "mark", 2);
                                 }
                             }
-                            string text = MatchManager.Instance.CreateCardInDictionary("" , "", false);
+                            string text = MatchManager.Instance.CreateCardInDictionary("", "", false);
                             CardData cardData = MatchManager.Instance.GetCardData(text);
                             while (true)
                             {
@@ -100,7 +100,7 @@ namespace TraitMod
                         // 如果是近战攻击，获得强效，抽1
                         else if (_castedCard.GetCardTypes().Contains(Enums.CardType.Melee_Attack))
                         {
-                            string text = MatchManager.Instance.CreateCardInDictionary("" , "", false);
+                            string text = MatchManager.Instance.CreateCardInDictionary("", "", false);
                             CardData cardData = MatchManager.Instance.GetCardData(text);
                             while (true)
                             {
@@ -125,6 +125,7 @@ namespace TraitMod
                     }
                 }
             }
+
             else if (_trait == "shazixnarmasteroftrack")
             {
                 if (MatchManager.Instance != null && _castedCard != null)
@@ -156,6 +157,25 @@ namespace TraitMod
                             }
                         }
                         return;
+                    }
+                }
+            }
+
+            else if (_trait == "shazixnartracker")
+            {
+                if (_character.HeroData != null)
+                {
+                    NPC[] teamNPC = MatchManager.Instance.GetTeamNPC();
+                    for (int i = 0; i < teamNPC.Length; i++)
+                    {
+                        if (teamNPC[i] != null && teamNPC[i].Alive)
+                        {
+                            teamNPC[i].SetAuraTrait(_character, "mark", 1);
+                            if (teamNPC[i].NPCItem != null)
+                            {
+                                teamNPC[i].NPCItem.ScrollCombatText(Texts.Instance.GetText("traits_Tracker", ""), Enums.CombatScrollEffectType.Trait);
+                            }
+                        }
                     }
                 }
             }
