@@ -1,3 +1,7 @@
+# 1.0.3
+
+Update for new game version.
+
 # 1.0.2
 
 Redo initial trait and change two enchantments.

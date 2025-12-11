@@ -16,189 +16,237 @@ namespace TraitMod
 
         public static string[] myTraitList = { "shazixnarmasterofmeleeandranged", "shazixnarmasteroftrack", "shazixnartracker" };
 
-        public static void myDoTrait(string _trait, ref Trait __instance)
+        private static readonly Traits _instance = new Traits();
+
+        public static void myDoTrait(
+            string trait,
+            Enums.EventActivation evt,
+            Character character,
+            Character target,
+            int auxInt,
+            string auxString,
+            CardData castedCard)
         {
-            // get info you may need
-            Enums.EventActivation _theEvent = Traverse.Create(__instance).Field("theEvent").GetValue<Enums.EventActivation>();
-            Character _character = Traverse.Create(__instance).Field("character").GetValue<Character>();
-            Character _target = Traverse.Create(__instance).Field("target").GetValue<Character>();
-            int _auxInt = Traverse.Create(__instance).Field("auxInt").GetValue<int>();
-            string _auxString = Traverse.Create(__instance).Field("auxString").GetValue<string>();
-            CardData _castedCard = Traverse.Create(__instance).Field("castedCard").GetValue<CardData>();
-            Traverse.Create(__instance).Field("character").SetValue(_character);
-            Traverse.Create(__instance).Field("target").SetValue(_target);
-            Traverse.Create(__instance).Field("theEvent").SetValue(_theEvent);
-            Traverse.Create(__instance).Field("auxInt").SetValue(_auxInt);
-            Traverse.Create(__instance).Field("auxString").SetValue(_auxString);
-            Traverse.Create(__instance).Field("castedCard").SetValue(_castedCard);
-            TraitData traitData = Globals.Instance.GetTraitData(_trait);
-            List<CardData> cardDataList = new List<CardData>();
-            List<string> heroHand = MatchManager.Instance.GetHeroHand(_character.HeroIndex);
-            Hero[] teamHero = MatchManager.Instance.GetTeamHero();
-            NPC[] teamNpc = MatchManager.Instance.GetTeamNPC();
+            if (character == null) return;
 
-            // activate traits
-            if (_trait == "shazixnarmasterofmeleeandranged")
+            switch (trait)
             {
-                if (MatchManager.Instance != null && _castedCard != null)
-                {
-                    traitData = Globals.Instance.GetTraitData("shazixnarmasterofmeleeandranged");
-                    if (MatchManager.Instance.activatedTraits != null && MatchManager.Instance.activatedTraits.ContainsKey("shazixnarmasterofmeleeandranged") && MatchManager.Instance.activatedTraits["shazixnarmasterofmeleeandranged"] > traitData.TimesPerTurn - 1)
-                    {
-                        return;
-                    }
-                    if ((_castedCard.GetCardTypes().Contains(Enums.CardType.Melee_Attack) || _castedCard.GetCardTypes().Contains(Enums.CardType.Ranged_Attack)) && _character.HeroData != null)
-                    {
-                        if (!MatchManager.Instance.activatedTraits.ContainsKey("shazixnarmasterofmeleeandranged"))
-                        {
-                            MatchManager.Instance.activatedTraits.Add("shazixnarmasterofmeleeandranged", 1);
-                        }
-                        else
-                        {
-                            Dictionary<string, int> activatedTraits = MatchManager.Instance.activatedTraits;
-                            activatedTraits["shazixnarmasterofmeleeandranged"] = activatedTraits["shazixnarmasterofmeleeandranged"] + 1;
-                        }
-                        MatchManager.Instance.SetTraitInfoText();
-                        // 如果是远程攻击，返还能量，上标记
-                        if (_castedCard.GetCardTypes().Contains(Enums.CardType.Ranged_Attack))
-                        {
-                            _character.ModifyEnergy(1, true);
-                            if (_character.HeroItem != null)
-                            {
-                                _character.HeroItem.ScrollCombatText(Texts.Instance.GetText("traits_Master of Melle and Ranged", "") + TextChargesLeft(MatchManager.Instance.activatedTraits["shazixnarmasterofmeleeandranged"], traitData.TimesPerTurn), Enums.CombatScrollEffectType.Trait);
-                                EffectsManager.Instance.PlayEffectAC("energy", true, _character.HeroItem.CharImageT, false, 0f);
-                            }
-                            for (int i = 0; i < teamNpc.Length; i++)
-                            {
-                                if (teamNpc[i] != null && teamNpc[i].Alive)
-                                {
-                                    teamNpc[i].SetAuraTrait(_character, "mark", 2);
-                                }
-                            }
-                            string text = MatchManager.Instance.CreateCardInDictionary("", "", false);
-                            CardData cardData = MatchManager.Instance.GetCardData(text);
-                            while (true)
-                            {
-                                int randomIntRange = MatchManager.Instance.GetRandomIntRange(0, 100, "trait", "");
-                                int randomIntRange2 = MatchManager.Instance.GetRandomIntRange(0, Globals.Instance.CardListByType[Enums.CardType.Melee_Attack].Count, "trait", "");
-                                string id = Globals.Instance.CardListByType[Enums.CardType.Melee_Attack][randomIntRange2];
-                                id = Functions.GetCardByRarity(randomIntRange, Globals.Instance.GetCardData(id, false), false);
-                                text = MatchManager.Instance.CreateCardInDictionary(id, "", false);
-                                cardData = MatchManager.Instance.GetCardData(text);
-                                if (cardData.CardClass.ToString() != "Monster")
-                                {
-                                    break;
-                                }
-                            }
-                            cardData.Vanish = true;
-                            cardData.EnergyReductionPermanent = 3;
-                            MatchManager.Instance.GenerateNewCard(1, text, false, Enums.CardPlace.Hand, null, null, -1, true, 0);
-                            MatchManager.Instance.ItemTraitActivated(true);
-                            MatchManager.Instance.CreateLogCardModification(cardData.InternalId, MatchManager.Instance.GetHero(_character.HeroIndex));
-                            return;
-                        }
-                        // 如果是近战攻击，获得强效，抽1
-                        else if (_castedCard.GetCardTypes().Contains(Enums.CardType.Melee_Attack))
-                        {
-                            string text = MatchManager.Instance.CreateCardInDictionary("", "", false);
-                            CardData cardData = MatchManager.Instance.GetCardData(text);
-                            while (true)
-                            {
-                                int randomIntRange = MatchManager.Instance.GetRandomIntRange(0, 100, "trait", "");
-                                int randomIntRange2 = MatchManager.Instance.GetRandomIntRange(0, Globals.Instance.CardListByType[Enums.CardType.Ranged_Attack].Count, "trait", "");
-                                string id = Globals.Instance.CardListByType[Enums.CardType.Ranged_Attack][randomIntRange2];
-                                id = Functions.GetCardByRarity(randomIntRange, Globals.Instance.GetCardData(id, false), false);
-                                text = MatchManager.Instance.CreateCardInDictionary(id, "", false);
-                                cardData = MatchManager.Instance.GetCardData(text);
-                                if (cardData.CardClass.ToString() != "Monster")
-                                {
-                                    break;
-                                }
-                            }
-                            cardData.Vanish = true;
-                            cardData.EnergyReductionPermanent = 3;
-                            MatchManager.Instance.GenerateNewCard(1, text, false, Enums.CardPlace.Hand, null, null, -1, true, 0);
-                            MatchManager.Instance.ItemTraitActivated(true);
-                            MatchManager.Instance.CreateLogCardModification(cardData.InternalId, MatchManager.Instance.GetHero(_character.HeroIndex));
-                            return;
-                        }
-                    }
-                }
-            }
+                case "shazixnarmasterofmeleeandranged":
+                    _instance.shazixnarmasterofmeleeandranged(evt, character, target, auxInt, auxString, castedCard, trait);
+                    break;
 
-            else if (_trait == "shazixnarmasteroftrack")
-            {
-                if (MatchManager.Instance != null && _castedCard != null)
-                {
-                    traitData = Globals.Instance.GetTraitData("shazixnarmasteroftrack");
-                    if (MatchManager.Instance.activatedTraits != null && MatchManager.Instance.activatedTraits.ContainsKey("shazixnarmasteroftrack") && MatchManager.Instance.activatedTraits["shazixnarmasteroftrack"] > traitData.TimesPerTurn - 1)
-                    {
-                        return;
-                    }
-                    if (_castedCard.GetCardTypes().Contains(Enums.CardType.Skill) && _character.HeroData != null)
-                    {
-                        if (!MatchManager.Instance.activatedTraits.ContainsKey("shazixnarmasteroftrack"))
-                        {
-                            MatchManager.Instance.activatedTraits.Add("shazixnarmasteroftrack", 1);
-                        }
-                        else
-                        {
-                            Dictionary<string, int> activatedTraits = MatchManager.Instance.activatedTraits;
-                            activatedTraits["shazixnarmasteroftrack"] = activatedTraits["shazixnarmasteroftrack"] + 1;
-                        }
-                        MatchManager.Instance.SetTraitInfoText();
-                        MatchManager.Instance.NewCard(1, Enums.CardFrom.Deck, "");
-                        NPC[] teamNPC = MatchManager.Instance.GetTeamNPC();
-                        for (int i = 0; i < teamNPC.Length; i++)
-                        {
-                            if (teamNPC[i] != null && teamNPC[i].Alive)
-                            {
-                                teamNPC[i].SetAuraTrait(_character, "sight", 2);
-                            }
-                        }
-                        return;
-                    }
-                }
-            }
+                case "shazixnarmasteroftrack":
+                    _instance.shazixnarmasteroftrack(evt, character, target, auxInt, auxString, castedCard, trait);
+                    break;
 
-            else if (_trait == "shazixnartracker")
-            {
-                if (_character.HeroData != null)
-                {
-                    NPC[] teamNPC = MatchManager.Instance.GetTeamNPC();
-                    for (int i = 0; i < teamNPC.Length; i++)
-                    {
-                        if (teamNPC[i] != null && teamNPC[i].Alive)
-                        {
-                            teamNPC[i].SetAuraTrait(_character, "mark", 1);
-                            if (teamNPC[i].NPCItem != null)
-                            {
-                                teamNPC[i].NPCItem.ScrollCombatText(Texts.Instance.GetText("traits_Tracker", ""), Enums.CombatScrollEffectType.Trait);
-                            }
-                        }
-                    }
-                }
+                case "shazixnartracker":
+                    _instance.shazixnartracker(evt, character, target, auxInt, auxString, castedCard, trait);
+                    break;
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(Trait), "DoTrait")]
-        public static bool DoTrait(Enums.EventActivation _theEvent, string _trait, Character _character, Character _target, int _auxInt, string _auxString, CardData _castedCard, ref Trait __instance)
+            // activate traits
+        public void shazixnarmasterofmeleeandranged(
+            Enums.EventActivation evt,
+            Character character,
+            Character target,
+            int auxInt,
+            string auxString,
+            CardData castedCard,
+            string trait)
         {
-            if ((UnityEngine.Object)MatchManager.Instance == (UnityEngine.Object)null)
-                return false;
-            Traverse.Create(__instance).Field("character").SetValue(_character);
-            Traverse.Create(__instance).Field("target").SetValue(_target);
-            Traverse.Create(__instance).Field("theEvent").SetValue(_theEvent);
-            Traverse.Create(__instance).Field("auxInt").SetValue(_auxInt);
-            Traverse.Create(__instance).Field("auxString").SetValue(_auxString);
-            Traverse.Create(__instance).Field("castedCard").SetValue(_castedCard);
-            if (Content.medsCustomTraitsSource.Contains(_trait) && myTraitList.Contains(_trait))
+            if (character == null || castedCard == null) return;
+
+            TraitData data = Globals.Instance.GetTraitData(trait);
+            int used = MatchManager.Instance.activatedTraits.ContainsKey(trait) ? MatchManager.Instance.activatedTraits[trait] : 0;
+            if (used >= data.TimesPerTurn) return;
+
+            bool isMelee = castedCard.GetCardTypes().Contains(Enums.CardType.Melee_Attack);
+            bool isRanged = castedCard.GetCardTypes().Contains(Enums.CardType.Ranged_Attack);
+
+            if (!isMelee && !isRanged) return;
+
+            MatchManager.Instance.activatedTraits[trait] = used + 1;
+            MatchManager.Instance.SetTraitInfoText();
+
+            // 显示 combat text
+            character.HeroItem?.ScrollCombatText(
+                Texts.Instance.GetText("traits_Master of Melle and Ranged", "")
+                + Functions.TextChargesLeft(used + 1, data.TimesPerTurn),
+                Enums.CombatScrollEffectType.Trait
+            );
+
+            NPC[] teamNpc = MatchManager.Instance.GetTeamNPC();
+
+            if (isRanged)
             {
-                myDoTrait(_trait, ref __instance);
-                return false;
+                // 返还能量
+                character.ModifyEnergy(1, true);
+
+                EffectsManager.Instance.PlayEffectAC("energy", true, character.HeroItem?.CharImageT, false, 0f);
+
+                // NPC 上标记
+                foreach (var npc in teamNpc)
+                {
+                    if (npc != null && npc.Alive)
+                        npc.SetAuraTrait(character, "mark", 2);
+                }
+
+                // 获得一张近战卡
+                string newCardId = "";
+                CardData newCard = null;
+                do
+                {
+                    int randPercent = MatchManager.Instance.GetRandomIntRange(0, 100, "trait", "");
+                    int randIndex = MatchManager.Instance.GetRandomIntRange(0, Globals.Instance.CardListByType[Enums.CardType.Melee_Attack].Count, "trait", "");
+                    string id = Globals.Instance.CardListByType[Enums.CardType.Melee_Attack][randIndex];
+                    id = Functions.GetCardByRarity(randPercent, Globals.Instance.GetCardData(id, false), false);
+                    newCardId = MatchManager.Instance.CreateCardInDictionary(id, "", false);
+                    newCard = MatchManager.Instance.GetCardData(newCardId);
+                } while (newCard.CardClass.ToString() == "Monster");
+
+                newCard.Vanish = true;
+                newCard.EnergyReductionPermanent = 3;
+                MatchManager.Instance.GenerateNewCard(1, newCardId, false, Enums.CardPlace.Hand, null, null, -1, true, 0);
+                MatchManager.Instance.ItemTraitActivated(true);
+                MatchManager.Instance.CreateLogCardModification(newCard.InternalId, MatchManager.Instance.GetHero(character.HeroIndex));
             }
-            return true;
+            else if (isMelee)
+            {
+                // 抽一牌
+                MatchManager.Instance.NewCard(1, Enums.CardFrom.Deck, "");
+
+                // 获得 1 强效
+                character.SetAuraTrait(character, "powerful", 1);
+
+                // 获得一张远程卡
+                string newCardId = "";
+                CardData newCard = null;
+                do
+                {
+                    int randPercent = MatchManager.Instance.GetRandomIntRange(0, 100, "trait", "");
+                    int randIndex = MatchManager.Instance.GetRandomIntRange(0, Globals.Instance.CardListByType[Enums.CardType.Ranged_Attack].Count, "trait", "");
+                    string id = Globals.Instance.CardListByType[Enums.CardType.Ranged_Attack][randIndex];
+                    id = Functions.GetCardByRarity(randPercent, Globals.Instance.GetCardData(id, false), false);
+                    newCardId = MatchManager.Instance.CreateCardInDictionary(id, "", false);
+                    newCard = MatchManager.Instance.GetCardData(newCardId);
+                } while (newCard.CardClass.ToString() == "Monster");
+
+                newCard.Vanish = true;
+                newCard.EnergyReductionPermanent = 3;
+                MatchManager.Instance.GenerateNewCard(1, newCardId, false, Enums.CardPlace.Hand, null, null, -1, true, 0);
+                MatchManager.Instance.ItemTraitActivated(true);
+                MatchManager.Instance.CreateLogCardModification(newCard.InternalId, MatchManager.Instance.GetHero(character.HeroIndex));
+            }
+        }
+
+        public void shazixnarmasteroftrack(
+            Enums.EventActivation evt,
+            Character character,
+            Character target,
+            int auxInt,
+            string auxString,
+            CardData castedCard,
+            string trait)
+        {
+            if (character == null || castedCard == null) return;
+
+            TraitData data = Globals.Instance.GetTraitData(trait);
+            int used = MatchManager.Instance.activatedTraits.ContainsKey(trait) ? MatchManager.Instance.activatedTraits[trait] : 0;
+            if (used >= data.TimesPerTurn) return;
+
+            if (!castedCard.HasCardType(Enums.CardType.Skill) || character.HeroData == null)
+                return;
+
+            MatchManager.Instance.activatedTraits[trait] = used + 1;
+            MatchManager.Instance.SetTraitInfoText();
+
+            // 显示 combat text
+            character.HeroItem?.ScrollCombatText(
+                Texts.Instance.GetText("traits_Master of Track", "")
+                + Functions.TextChargesLeft(used + 1, data.TimesPerTurn),
+                Enums.CombatScrollEffectType.Trait
+            );
+
+            // 抽一张新卡（从 Deck）
+            MatchManager.Instance.NewCard(1, Enums.CardFrom.Deck, "");
+
+            // 队伍 NPC 增加 sight 光环
+            NPC[] teamNPC = MatchManager.Instance.GetTeamNPC();
+            foreach (var npc in teamNPC)
+            {
+                if (npc != null && npc.Alive)
+                    npc.SetAuraTrait(character, "sight", 2);
+            }
+        }
+
+        public void shazixnartracker(
+            Enums.EventActivation evt,
+            Character character,
+            Character target,
+            int auxInt,
+            string auxString,
+            CardData castedCard,
+            string trait)
+        {
+            if (character == null || character.HeroData == null) return;
+
+            NPC[] teamNPC = MatchManager.Instance.GetTeamNPC();
+            foreach (var npc in teamNPC)
+            {
+                if (npc != null && npc.Alive)
+                {
+                    npc.SetAuraTrait(character, "mark", 1);
+
+                    if (npc.NPCItem != null)
+                    {
+                        npc.NPCItem.ScrollCombatText(
+                            Texts.Instance.GetText("traits_Tracker", ""),
+                            Enums.CombatScrollEffectType.Trait
+                        );
+                    }
+                }
+            }
+
+            // 可选：如果需要显示 trait 次数，也可以像其他 trait 一样加上计数
+        }
+
+        [HarmonyPatch(typeof(Trait), "DoTrait")]
+        public static class Trait_DoTrait_Patch
+        {
+            [HarmonyPrefix]
+            public static bool Prefix(
+                Enums.EventActivation __0,   // theEvent
+                string __1,                  // trait id
+                Character __2,               // character
+                Character __3,               // target
+                int __4,                     // auxInt
+                string __5,                  // auxString
+                CardData __6,                // castedCard
+                Trait __instance)
+            {
+                string trait = __1;
+
+                // 如果是自定义 trait，就直接调用我们的逻辑
+                if (myTraitList.Contains(trait))
+                {
+                    myDoTrait(
+                        trait,
+                        __0,        // event
+                        __2,        // character
+                        __3,        // target
+                        __4,        // auxInt
+                        __5,        // auxString
+                        __6         // castedCard
+                    );
+
+                    // 返回 false = 阻止原版 DoTrait 执行
+                    return false;
+                }
+
+                // 否则走原版逻辑
+                return true;
+            }
         }
 
         public static string TextChargesLeft(int currentCharges, int chargesTotal)
